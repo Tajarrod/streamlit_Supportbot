@@ -473,8 +473,8 @@ with st.sidebar:
     • **Upload files** using the + icon
     • **Ask questions** about documents or images
     • **Get technical support** for SyncroPatch
-    • **JIRA queries** - ask about issues, tickets, bugs
-    • **Create issues** - "create new issue in FSM project"
+    • **JIRA live queries** - "show me issues in FSM project live query"
+    • **Create issues** - "create new issue in FSM project live query"
     """)
     
     st.markdown("---")
@@ -664,10 +664,10 @@ if user_input or (uploaded_file is not None and st.session_state.current_file is
     # Determine which function to call based on user input
     user_input_lower = user_input.lower() if user_input else ""
     
-    # Check if this is a JIRA-related request
-    if any(keyword in user_input_lower for keyword in ["jira", "issue", "ticket", "bug", "task", "story", "epic"]):
-        # Handle JIRA requests
-        with st.spinner("]i[ SyncroPatch Bot is querying JIRA..."):
+    # Check if this is a JIRA-related request with "live query" specified
+    if any(keyword in user_input_lower for keyword in ["jira", "issue", "ticket", "bug", "task", "story", "epic"]) and "live query" in user_input_lower:
+        # Handle JIRA live query requests
+        with st.spinner("]i[ SyncroPatch Bot is querying JIRA live data..."):
             try:
                 if "create" in user_input_lower or "new" in user_input_lower or "add" in user_input_lower:
                     ai_response = handle_issue_creation(user_input)
