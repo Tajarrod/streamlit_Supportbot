@@ -365,6 +365,16 @@ def call_jira_function(endpoint, data):
 
 def handle_jira_query(user_input):
     """Handle JIRA queries through Azure Function"""
+    if JIRA_QUERY_URL == "mock":
+        # Return mock data directly
+        return {
+            "issues": [
+                {"key": "FSM-123", "summary": "Fix login issue", "status": "In Progress", "assignee": "John Doe"},
+                {"key": "FSM-124", "summary": "Update documentation", "status": "Done", "assignee": "Jane Smith"},
+                {"key": "FSM-125", "summary": "Add new feature", "status": "To Do", "assignee": "Mike Johnson"}
+            ]
+        }
+    
     data = {"question": user_input}
     result = call_jira_function(JIRA_QUERY_URL, data)
     
@@ -375,6 +385,14 @@ def handle_jira_query(user_input):
 
 def handle_jira_stats(user_input):
     """Handle JIRA statistics through Azure Function"""
+    if JIRA_STATS_URL == "mock":
+        # Return mock data directly
+        return {
+            "total_issues": 15,
+            "by_status": {"To Do": 5, "In Progress": 7, "Done": 3},
+            "by_assignee": {"John Doe": 6, "Jane Smith": 4, "Mike Johnson": 5}
+        }
+    
     data = {"question": user_input}
     result = call_jira_function(JIRA_STATS_URL, data)
     
@@ -385,6 +403,14 @@ def handle_jira_stats(user_input):
 
 def handle_issue_creation(user_input):
     """Handle issue creation through Azure Function"""
+    if CREATE_ISSUE_URL == "mock":
+        # Return mock data directly
+        return {
+            "success": True,
+            "issue_key": "FSM-126",
+            "message": "Issue created successfully"
+        }
+    
     data = {"request": user_input}
     result = call_jira_function(CREATE_ISSUE_URL, data)
     
