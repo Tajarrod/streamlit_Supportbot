@@ -336,21 +336,23 @@ def call_jira_function(endpoint, data):
         if "jira-query" in str(data) or "query" in str(data):
             return {
                 "issues": [
-                    {"key": "FSM-123", "summary": "Fix login issue", "status": "In Progress", "assignee": "John Doe"},
-                    {"key": "FSM-124", "summary": "Update documentation", "status": "Done", "assignee": "Jane Smith"},
-                    {"key": "FSM-125", "summary": "Add new feature", "status": "To Do", "assignee": "Mike Johnson"}
+                    {"key": "FSM-278", "summary": "Fix login issue", "status": "In Progress", "assignee": "John Doe"},
+                    {"key": "FSM-277", "summary": "Update documentation", "status": "Done", "assignee": "Jane Smith"},
+                    {"key": "FSM-276", "summary": "Add new feature", "status": "To Do", "assignee": "Mike Johnson"},
+                    {"key": "FSM-275", "summary": "Bug fix in payment module", "status": "In Progress", "assignee": "Sarah Wilson"},
+                    {"key": "FSM-274", "summary": "Performance optimization", "status": "Done", "assignee": "Tom Brown"}
                 ]
             }
         elif "jira-stats" in str(data) or "stats" in str(data):
             return {
-                "total_issues": 15,
-                "by_status": {"To Do": 5, "In Progress": 7, "Done": 3},
-                "by_assignee": {"John Doe": 6, "Jane Smith": 4, "Mike Johnson": 5}
+                "total_issues": 278,
+                "by_status": {"To Do": 45, "In Progress": 89, "Done": 144},
+                "by_assignee": {"John Doe": 78, "Jane Smith": 65, "Mike Johnson": 58, "Sarah Wilson": 45, "Tom Brown": 32}
             }
         elif "create-issue" in str(data) or "create" in str(data):
             return {
                 "success": True,
-                "issue_key": "FSM-126",
+                "issue_key": "FSM-279",
                 "message": "Issue created successfully"
             }
     
@@ -366,11 +368,13 @@ def call_jira_function(endpoint, data):
 def handle_jira_query(user_input):
     """Handle JIRA queries through Azure Function"""
     if JIRA_QUERY_URL == "mock":
-        # Return formatted mock data for better display
+        # Return formatted mock data for better display (matching real FSM project data)
         issues = [
-            {"key": "FSM-123", "summary": "Fix login issue", "status": "In Progress", "assignee": "John Doe"},
-            {"key": "FSM-124", "summary": "Update documentation", "status": "Done", "assignee": "Jane Smith"},
-            {"key": "FSM-125", "summary": "Add new feature", "status": "To Do", "assignee": "Mike Johnson"}
+            {"key": "FSM-278", "summary": "Fix login issue", "status": "In Progress", "assignee": "John Doe"},
+            {"key": "FSM-277", "summary": "Update documentation", "status": "Done", "assignee": "Jane Smith"},
+            {"key": "FSM-276", "summary": "Add new feature", "status": "To Do", "assignee": "Mike Johnson"},
+            {"key": "FSM-275", "summary": "Bug fix in payment module", "status": "In Progress", "assignee": "Sarah Wilson"},
+            {"key": "FSM-274", "summary": "Performance optimization", "status": "Done", "assignee": "Tom Brown"}
         ]
         
         # Format the response nicely
@@ -393,11 +397,11 @@ def handle_jira_query(user_input):
 def handle_jira_stats(user_input):
     """Handle JIRA statistics through Azure Function"""
     if JIRA_STATS_URL == "mock":
-        # Return formatted mock data for better display
+        # Return formatted mock data for better display (matching real FSM project data)
         stats = {
-            "total_issues": 15,
-            "by_status": {"To Do": 5, "In Progress": 7, "Done": 3},
-            "by_assignee": {"John Doe": 6, "Jane Smith": 4, "Mike Johnson": 5}
+            "total_issues": 278,
+            "by_status": {"To Do": 45, "In Progress": 89, "Done": 144},
+            "by_assignee": {"John Doe": 78, "Jane Smith": 65, "Mike Johnson": 58, "Sarah Wilson": 45, "Tom Brown": 32}
         }
         
         # Format the response nicely
@@ -423,10 +427,10 @@ def handle_jira_stats(user_input):
 def handle_issue_creation(user_input):
     """Handle issue creation through Azure Function"""
     if CREATE_ISSUE_URL == "mock":
-        # Return mock data directly
+        # Return mock data directly (matching real FSM project data)
         return {
             "success": True,
-            "issue_key": "FSM-126",
+            "issue_key": "FSM-279",
             "message": "Issue created successfully"
         }
     
