@@ -322,8 +322,53 @@ if "current_file" not in st.session_state:
 if "file_uploader_key" not in st.session_state:
     st.session_state.file_uploader_key = 0
 
-# Azure Function URL (you'll need to set this)
+# Azure Function URLs
 AZURE_FUNCTION_URL = os.getenv("AZURE_FUNCTION_URL", "https://openai-teams-bot-file-text2-f6d3f6bce5d7g6hx.canadacentral-01.azurewebsites.net/api/getOpenAIReply")
+JIRA_QUERY_URL = os.getenv("JIRA_QUERY_URL", "https://openai-teams-bot-file-text2-f6d3f6bce5d7g6hx.canadacentral-01.azurewebsites.net/api/jira-query")
+JIRA_STATS_URL = os.getenv("JIRA_STATS_URL", "https://openai-teams-bot-file-text2-f6d3f6bce5d7g6hx.canadacentral-01.azurewebsites.net/api/jira-stats")
+CREATE_ISSUE_URL = os.getenv("CREATE_ISSUE_URL", "https://openai-teams-bot-file-text2-f6d3f6bce5d7g6hx.canadacentral-01.azurewebsites.net/api/create-issue")
+
+# JIRA Integration Functions
+def call_jira_function(endpoint, data):
+    """Call Azure Function endpoint for JIRA operations"""
+    try:
+        response = requests.post(endpoint, json=data, timeout=30)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {"error": f"Function call failed: {response.status_code} - {response.text}"}
+    except Exception as e:
+        return {"error": f"Connection error: {str(e)}"}
+
+def handle_jira_query(user_input):
+    """Handle JIRA queries through Azure Function"""
+    data = {"question": user_input}
+    result = call_jira_function(JIRA_QUERY_URL, data)
+    
+    if "error" in result:
+        return f"❌ Error: {result['error']}"
+    else:
+        return result.get("reply", "No response received")
+
+def handle_jira_stats(user_input):
+    """Handle JIRA statistics through Azure Function"""
+    data = {"question": user_input}
+    result = call_jira_function(JIRA_STATS_URL, data)
+    
+    if "error" in result:
+        return f"❌ Error: {result['error']}"
+    else:
+        return result.get("reply", "No response received")
+
+def handle_issue_creation(user_input):
+    """Handle issue creation through Azure Function"""
+    data = {"request": user_input}
+    result = call_jira_function(CREATE_ISSUE_URL, data)
+    
+    if "error" in result:
+        return f"❌ Error: {result['error']}"
+    else:
+        return result.get("reply", "No response received")
 
 # Header
 st.markdown('<h1 class="main-header"><span style="font-size: 1.5em; font-weight: bold; color: #000000;">]i[</span><br>SyncroPatch Support Bot</h1>', unsafe_allow_html=True)
@@ -337,10 +382,16 @@ with st.sidebar:
     I am **SyncroPatch support bot** and you can ask me technical and application questions. 
     
     **My capabilities:**
-    - Access to Jira projects (FSM, FSO, SP-WISHLIST, SCS)
-    - Technical and application documents
-    - Memory for one hour
-    - File analysis (PDF, Word, Excel, images)
+    - 🔍 **JIRA Integration** - Query issues, create tickets, view statistics
+    - 📄 **Document Analysis** - PDF, Word, Excel, images
+    - 🧠 **Memory** - Remembers context for one hour
+    - 🎯 **Project Access** - FSM, FSO, SP-WISHLIST, SCS projects
+    - 💬 **Technical Support** - SyncroPatch questions and help
+    
+    **JIRA Commands:**
+    - "Show recent issues in FSM project"
+    - "Create new bug ticket in SPWISH"
+    - "What are the statistics for FSO project?"
     
     **To reset my memory:** Just tell me!
     """)
@@ -354,7 +405,19 @@ with st.sidebar:
     • **Upload files** using the + icon
     • **Ask questions** about documents or images
     • **Get technical support** for SyncroPatch
+    • **JIRA queries** - ask about issues, tickets, bugs
+    • **Create issues** - "create new issue in FSM project"
     """)
+    
+    st.markdown("---")
+    
+    # JIRA Test Button
+    st.subheader("🔧 JIRA Connection Test")
+    if st.button("Test JIRA Connection", type="secondary"):
+        with st.spinner("Testing JIRA connection..."):
+            test_result = handle_jira_query("what are the recent issues in SPWISH project?")
+            st.write("**Test Result:**")
+            st.write(test_result)
     
     st.markdown("---")
     
@@ -530,37 +593,22 @@ if user_input or (uploaded_file is not None and st.session_state.current_file is
             "timestamp": current_time
         })
     
-    # Prepare request to Azure Function
-    payload = {
-        "question": user_input or "Please analyze this file",
-        "userId": st.session_state.user_id
-    }
+    # Determine which function to call based on user input
+    user_input_lower = user_input.lower() if user_input else ""
     
-    # Handle file upload - only if there's a current file
-    if st.session_state.current_file is not None:
-        # Read file content
-        file_content = st.session_state.current_file.read()
-        file_base64 = base64.b64encode(file_content).decode('utf-8')
-        
-        payload["fileContent"] = file_base64
-        payload["fileType"] = st.session_state.current_file.type
-    
-    # Show loading spinner and process request
-    with st.spinner("]i[ SyncroPatch Bot is analyzing..."):
-        try:
-            # Call Azure Function
-            response = requests.post(
-                AZURE_FUNCTION_URL,
-                json=payload,
-                headers={"Content-Type": "application/json"},
-                timeout=60
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                ai_response = result.get("reply", "No response received")
+    # Check if this is a JIRA-related request
+    if any(keyword in user_input_lower for keyword in ["jira", "issue", "ticket", "bug", "task", "story", "epic"]):
+        # Handle JIRA requests
+        with st.spinner("]i[ SyncroPatch Bot is querying JIRA..."):
+            try:
+                if "create" in user_input_lower or "new" in user_input_lower:
+                    ai_response = handle_issue_creation(user_input)
+                elif "stat" in user_input_lower or "dashboard" in user_input_lower:
+                    ai_response = handle_jira_stats(user_input)
+                else:
+                    ai_response = handle_jira_query(user_input)
                 
-                # Add Support AI response to chat with timestamp
+                # Add JIRA response to chat with timestamp
                 bot_time = datetime.now().strftime("%H:%M")
                 st.session_state.messages.append({
                     "role": "assistant", 
@@ -569,26 +617,74 @@ if user_input or (uploaded_file is not None and st.session_state.current_file is
                 })
                 
                 # Clear the current file after processing
-                st.session_state.current_file = None
+                if st.session_state.current_file is not None:
+                    st.session_state.current_file = None
+                    st.session_state.file_uploader_key += 1
+                    st.rerun()
                 
-                # Increment file uploader key to reset the widget
-                st.session_state.file_uploader_key += 1
-                
-                # Force clear the file uploader by rerunning
-                st.rerun()
-                
-                # Show success message
-                st.success("✅ Response received!")
-                
-            else:
-                error_msg = f"Error {response.status_code}: {response.text}"
+            except Exception as e:
+                error_msg = f"JIRA processing error: {str(e)}"
                 st.session_state.messages.append({"role": "assistant", "content": f"❌ {error_msg}"})
                 st.error(error_msg)
+    
+    else:
+        # Handle regular AI requests (original functionality)
+        # Prepare request to Azure Function
+        payload = {
+            "question": user_input or "Please analyze this file",
+            "userId": st.session_state.user_id
+        }
+        
+        # Handle file upload - only if there's a current file
+        if st.session_state.current_file is not None:
+            # Read file content
+            file_content = st.session_state.current_file.read()
+            file_base64 = base64.b64encode(file_content).decode('utf-8')
+            
+            payload["fileContent"] = file_base64
+            payload["fileType"] = st.session_state.current_file.type
+        
+        # Show loading spinner and process request
+        with st.spinner("]i[ SyncroPatch Bot is analyzing..."):
+            try:
+                # Call Azure Function
+                response = requests.post(
+                    AZURE_FUNCTION_URL,
+                    json=payload,
+                    headers={"Content-Type": "application/json"},
+                    timeout=60
+                )
                 
-        except requests.exceptions.RequestException as e:
-            error_msg = f"Connection error: {str(e)}"
-            st.session_state.messages.append({"role": "assistant", "content": f"❌ {error_msg}"})
-            st.error(error_msg)
+                if response.status_code == 200:
+                    result = response.json()
+                    ai_response = result.get("reply", "No response received")
+                    
+                    # Add Support AI response to chat with timestamp
+                    bot_time = datetime.now().strftime("%H:%M")
+                    st.session_state.messages.append({
+                        "role": "assistant", 
+                        "content": ai_response,
+                        "timestamp": bot_time
+                    })
+                    
+                    # Clear the current file after processing
+                    st.session_state.current_file = None
+                    
+                    # Increment file uploader key to reset the widget
+                    st.session_state.file_uploader_key += 1
+                    
+                    # Force clear the file uploader by rerunning
+                    st.rerun()
+                    
+                else:
+                    error_msg = f"Error {response.status_code}: {response.text}"
+                    st.session_state.messages.append({"role": "assistant", "content": f"❌ {error_msg}"})
+                    st.error(error_msg)
+                    
+            except requests.exceptions.RequestException as e:
+                error_msg = f"Connection error: {str(e)}"
+                st.session_state.messages.append({"role": "assistant", "content": f"❌ {error_msg}"})
+                st.error(error_msg)
     
     # Rerun to update the chat
     st.rerun()
