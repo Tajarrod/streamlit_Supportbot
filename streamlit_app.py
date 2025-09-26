@@ -8,7 +8,7 @@ from datetime import datetime
 # Page configuration
 st.set_page_config(
     page_title="SyncroPatch Support Bot",
-    page_icon="📄",
+    page_icon="]i[",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -324,13 +324,36 @@ if "file_uploader_key" not in st.session_state:
 
 # Azure Function URLs
 AZURE_FUNCTION_URL = os.getenv("AZURE_FUNCTION_URL", "https://openai-teams-bot-file-text2-f6d3f6bce5d7g6hx.canadacentral-01.azurewebsites.net/api/getOpenAIReply")
-JIRA_QUERY_URL = os.getenv("JIRA_QUERY_URL", "https://openai-teams-bot-file-text2-f6d3f6bce5d7g6hx.canadacentral-01.azurewebsites.net/api/jira-query")
-JIRA_STATS_URL = os.getenv("JIRA_STATS_URL", "https://openai-teams-bot-file-text2-f6d3f6bce5d7g6hx.canadacentral-01.azurewebsites.net/api/jira-stats")
-CREATE_ISSUE_URL = os.getenv("CREATE_ISSUE_URL", "https://openai-teams-bot-file-text2-f6d3f6bce5d7g6hx.canadacentral-01.azurewebsites.net/api/create-issue")
+JIRA_QUERY_URL = os.getenv("JIRA_QUERY_URL", "mock")
+JIRA_STATS_URL = os.getenv("JIRA_STATS_URL", "mock")
+CREATE_ISSUE_URL = os.getenv("CREATE_ISSUE_URL", "mock")
 
 # JIRA Integration Functions
 def call_jira_function(endpoint, data):
     """Call Azure Function endpoint for JIRA operations"""
+    if endpoint == "mock":
+        # Return mock data for demonstration
+        if "jira-query" in str(data) or "query" in str(data):
+            return {
+                "issues": [
+                    {"key": "FSM-123", "summary": "Fix login issue", "status": "In Progress", "assignee": "John Doe"},
+                    {"key": "FSM-124", "summary": "Update documentation", "status": "Done", "assignee": "Jane Smith"},
+                    {"key": "FSM-125", "summary": "Add new feature", "status": "To Do", "assignee": "Mike Johnson"}
+                ]
+            }
+        elif "jira-stats" in str(data) or "stats" in str(data):
+            return {
+                "total_issues": 15,
+                "by_status": {"To Do": 5, "In Progress": 7, "Done": 3},
+                "by_assignee": {"John Doe": 6, "Jane Smith": 4, "Mike Johnson": 5}
+            }
+        elif "create-issue" in str(data) or "create" in str(data):
+            return {
+                "success": True,
+                "issue_key": "FSM-126",
+                "message": "Issue created successfully"
+            }
+    
     try:
         response = requests.post(endpoint, json=data, timeout=30)
         if response.status_code == 200:
