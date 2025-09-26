@@ -366,14 +366,21 @@ def call_jira_function(endpoint, data):
 def handle_jira_query(user_input):
     """Handle JIRA queries through Azure Function"""
     if JIRA_QUERY_URL == "mock":
-        # Return mock data directly
-        return {
-            "issues": [
-                {"key": "FSM-123", "summary": "Fix login issue", "status": "In Progress", "assignee": "John Doe"},
-                {"key": "FSM-124", "summary": "Update documentation", "status": "Done", "assignee": "Jane Smith"},
-                {"key": "FSM-125", "summary": "Add new feature", "status": "To Do", "assignee": "Mike Johnson"}
-            ]
-        }
+        # Return formatted mock data for better display
+        issues = [
+            {"key": "FSM-123", "summary": "Fix login issue", "status": "In Progress", "assignee": "John Doe"},
+            {"key": "FSM-124", "summary": "Update documentation", "status": "Done", "assignee": "Jane Smith"},
+            {"key": "FSM-125", "summary": "Add new feature", "status": "To Do", "assignee": "Mike Johnson"}
+        ]
+        
+        # Format the response nicely
+        response = f"🔍 **JIRA Issues Found**\n\n"
+        for issue in issues:
+            response += f"**{issue['key']}** - {issue['summary']}\n"
+            response += f"• Status: {issue['status']}\n"
+            response += f"• Assignee: {issue['assignee']}\n\n"
+        
+        return response
     
     data = {"question": user_input}
     result = call_jira_function(JIRA_QUERY_URL, data)
@@ -386,12 +393,24 @@ def handle_jira_query(user_input):
 def handle_jira_stats(user_input):
     """Handle JIRA statistics through Azure Function"""
     if JIRA_STATS_URL == "mock":
-        # Return mock data directly
-        return {
+        # Return formatted mock data for better display
+        stats = {
             "total_issues": 15,
             "by_status": {"To Do": 5, "In Progress": 7, "Done": 3},
             "by_assignee": {"John Doe": 6, "Jane Smith": 4, "Mike Johnson": 5}
         }
+        
+        # Format the response nicely
+        response = f"📊 **JIRA Statistics**\n\n"
+        response += f"**Total Issues:** {stats['total_issues']}\n\n"
+        response += f"**By Status:**\n"
+        for status, count in stats['by_status'].items():
+            response += f"• {status}: {count}\n"
+        response += f"\n**By Assignee:**\n"
+        for assignee, count in stats['by_assignee'].items():
+            response += f"• {assignee}: {count}\n"
+        
+        return response
     
     data = {"question": user_input}
     result = call_jira_function(JIRA_STATS_URL, data)
@@ -650,9 +669,9 @@ if user_input or (uploaded_file is not None and st.session_state.current_file is
         # Handle JIRA requests
         with st.spinner("]i[ SyncroPatch Bot is querying JIRA..."):
             try:
-                if "create" in user_input_lower or "new" in user_input_lower:
+                if "create" in user_input_lower or "new" in user_input_lower or "add" in user_input_lower:
                     ai_response = handle_issue_creation(user_input)
-                elif "stat" in user_input_lower or "dashboard" in user_input_lower:
+                elif "stat" in user_input_lower or "dashboard" in user_input_lower or "how many" in user_input_lower or "count" in user_input_lower:
                     ai_response = handle_jira_stats(user_input)
                 else:
                     ai_response = handle_jira_query(user_input)
