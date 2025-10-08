@@ -357,7 +357,7 @@ def call_jira_function(endpoint, data):
             }
     
     try:
-        response = requests.post(endpoint, json=data, timeout=30)
+        response = requests.post(endpoint, json=data, timeout=120)
         if response.status_code == 200:
             return response.json()
         else:
@@ -724,7 +724,7 @@ if user_input or (uploaded_file is not None and st.session_state.current_file is
                     AZURE_FUNCTION_URL,
                     json=payload,
                     headers={"Content-Type": "application/json"},
-                    timeout=60
+                    timeout=300
                 )
                 
                 if response.status_code == 200:
